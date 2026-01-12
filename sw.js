@@ -1,45 +1,25 @@
-const CACHE_NAME = 'diario-food-v1';
-const ASSETS = [
-    '/',
-    '/index.html',
-    '/manifest.json'
-];
+const CACHE_NAME = 'diario-food-v2';
+const ASSETS = ['/', '/index.html', '/manifest.json'];
 
-// Install
-self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS);
-        })
-    );
+self.addEventListener('install', (e) => {
+    e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
     self.skipWaiting();
 });
 
-// Activate
-self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((keys) => {
-            return Promise.all(
-                keys.filter((key) => key !== CACHE_NAME)
-                    .map((key) => caches.delete(key))
-            );
-        })
-    );
+self.addEventListener('activate', (e) => {
+    e.waitUntil(caches.keys().then(keys => 
+        Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    ));
     self.clients.claim();
 });
 
-// Fetch
-self.addEventListener('fetch', (event) => {
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request).then((fetchResponse) => {
-                return caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, fetchResponse.clone());
-                    return fetchResponse;
-                });
+self.addEventListener('fetch', (e) => {
+    e.respondWith(
+        caches.match(e.request).then(r => r || fetch(e.request).then(res => {
+            return caches.open(CACHE_NAME).then(c => {
+                c.put(e.request, res.clone());
+                return res;
             });
-        }).catch(() => {
-            return caches.match('/index.html');
-        })
+        })).catch(() => caches.match('/index.html'))
     );
 });
