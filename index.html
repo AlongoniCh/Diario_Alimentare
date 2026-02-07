@@ -413,7 +413,7 @@
                 <button class="quick-btn" onclick="selType(this)"><span class="quick-icon">🍪</span><span class="quick-lbl">Snack</span></button>
             </div>
             <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="mDate"></div>
-            <div class="form-group"><label class="form-label">Alimento</label><select class="form-select" id="mFood" onchange="updFood()"><option value="">Seleziona...</option></select></div>
+            <div class="form-group"><label class="form-label">Alimento</label><input type="text" class="form-input" id="mFoodSearch" placeholder="🔍 Cerca alimento..." oninput="filterMealFoods()"><select class="form-select" id="mFood" onchange="updFood()" style="margin-top:8px"><option value="">Seleziona...</option></select></div>
             <div class="form-row">
                 <div class="form-group"><label class="form-label">Quantità</label><input type="number" class="form-input" id="mQty" placeholder="100" step="0.1" oninput="calcCal()"></div>
                 <div class="form-group"><label class="form-label">Unità</label><input type="text" class="form-input" id="mUnit" readonly></div>
@@ -433,7 +433,7 @@
             <div class="sheet-head"><h2 class="sheet-title">Modifica Pasto</h2><button class="sheet-close" onclick="closeModal('editMealModal')">✕</button></div>
             <input type="hidden" id="eId">
             <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="eDate"></div>
-            <div class="form-group"><label class="form-label">Alimento</label><select class="form-select" id="eFood" onchange="updEFood()"><option value="">Seleziona...</option></select></div>
+            <div class="form-group"><label class="form-label">Alimento</label><input type="text" class="form-input" id="eFoodSearch" placeholder="🔍 Cerca alimento..." oninput="filterEditFoods()"><select class="form-select" id="eFood" onchange="updEFood()" style="margin-top:8px"><option value="">Seleziona...</option></select></div>
             <div class="form-row">
                 <div class="form-group"><label class="form-label">Quantità</label><input type="number" class="form-input" id="eQty" step="0.1" oninput="calcECal()"></div>
                 <div class="form-group"><label class="form-label">Unità</label><input type="text" class="form-input" id="eUnit" readonly></div>
@@ -470,11 +470,37 @@
     <div class="modal" id="addWeightModal">
         <div class="sheet">
             <div class="sheet-handle"></div>
-            <div class="sheet-head"><h2 class="sheet-title">Registra Peso</h2><button class="sheet-close" onclick="closeModal('addWeightModal')">✕</button></div>
-            <div class="form-group"><label class="form-label">Peso (kg)</label><input type="number" class="form-input" id="wVal" placeholder="75.5" step="0.1"></div>
-            <div class="form-group"><label class="form-label">Data</label><input type="date" class="form-input" id="wDate"></div>
-            <div class="form-group"><label class="form-label">Note</label><input type="text" class="form-input" id="wNote" placeholder="Opzionale"></div>
-            <button class="btn btn-primary" onclick="saveWeight()">Salva Peso</button>
+            <div class="sheet-head"><h2 class="sheet-title">Dati Salute</h2><button class="sheet-close" onclick="closeModal('addWeightModal')">✕</button></div>
+            <div class="form-group"><label class="form-label">📅 Data</label><input type="date" class="form-input" id="wDate"></div>
+            <div class="form-group"><label class="form-label">⚖️ Peso (kg)</label><input type="number" class="form-input" id="wVal" placeholder="75.5" step="0.1"></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">🔺 Press. Max (mmHg)</label><input type="number" class="form-input" id="wPresMax" placeholder="120"></div>
+                <div class="form-group"><label class="form-label">🔻 Press. Min (mmHg)</label><input type="number" class="form-input" id="wPresMin" placeholder="80"></div>
+            </div>
+            <div class="form-group"><label class="form-label">❤️ Battito (bpm)</label><input type="number" class="form-input" id="wBpm" placeholder="70"></div>
+            <div class="form-group"><label class="form-label">📝 Note</label><input type="text" class="form-input" id="wNote" placeholder="Opzionale"></div>
+            <button class="btn btn-primary" onclick="saveWeight()">Salva Dati</button>
+        </div>
+    </div>
+
+    <!-- EDIT WEIGHT MODAL -->
+    <div class="modal" id="editWeightModal">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-head"><h2 class="sheet-title">Modifica Dati</h2><button class="sheet-close" onclick="closeModal('editWeightModal')">✕</button></div>
+            <input type="hidden" id="ewOrigDate">
+            <div class="form-group"><label class="form-label">📅 Data</label><input type="date" class="form-input" id="ewDate"></div>
+            <div class="form-group"><label class="form-label">⚖️ Peso (kg)</label><input type="number" class="form-input" id="ewVal" placeholder="75.5" step="0.1"></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">🔺 Press. Max (mmHg)</label><input type="number" class="form-input" id="ewPresMax" placeholder="120"></div>
+                <div class="form-group"><label class="form-label">🔻 Press. Min (mmHg)</label><input type="number" class="form-input" id="ewPresMin" placeholder="80"></div>
+            </div>
+            <div class="form-group"><label class="form-label">❤️ Battito (bpm)</label><input type="number" class="form-input" id="ewBpm" placeholder="70"></div>
+            <div class="form-group"><label class="form-label">📝 Note</label><input type="text" class="form-input" id="ewNote" placeholder="Opzionale"></div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="closeModal('editWeightModal')">Annulla</button>
+                <button class="btn btn-primary" onclick="updateWeight()">Salva</button>
+            </div>
         </div>
     </div>
 
@@ -528,7 +554,7 @@ function showView(v){
 // ========== MODALS ==========
 function openModal(id){
     document.getElementById(id).classList.add('active');
-    if(id==='addMealModal'){popFoods('mFood');document.getElementById('mDate').value=fmtDate(selDate);document.getElementById('mTime').value=new Date().toTimeString().slice(0,5);document.getElementById('mCal').textContent='0';}
+    if(id==='addMealModal'){document.getElementById('mFoodSearch').value='';popFoods('mFood');document.getElementById('mDate').value=fmtDate(new Date());document.getElementById('mTime').value=new Date().toTimeString().slice(0,5);document.getElementById('mCal').textContent='0';document.getElementById('mQty').value='';document.getElementById('mUnit').value='';}
     if(id==='addWeightModal')document.getElementById('wDate').value=fmtDate(new Date());
 }
 function closeModal(id){document.getElementById(id).classList.remove('active');}
@@ -595,6 +621,7 @@ function renderMealsHist(){
 }
 function openEdit(id){
     const m=DB.meals.find(x=>x.id===id);if(!m)return;
+    document.getElementById('eFoodSearch').value='';
     popFoods('eFood');
     document.getElementById('eId').value=m.id;
     document.getElementById('eDate').value=m.date;
@@ -603,6 +630,9 @@ function openEdit(id){
     document.getElementById('eUnit').value=m.unit;
     document.getElementById('eTime').value=m.time;
     document.getElementById('eCal').textContent=m.calories;
+    // Set search field to current food name
+    const f=DB.foods.find(x=>x.id===m.foodId);
+    if(f)document.getElementById('eFoodSearch').value=f.name;
     openModal('editMealModal');
 }
 function updEFood(){const f=DB.foods.find(x=>x.id===document.getElementById('eFood').value);if(f){document.getElementById('eUnit').value=f.unit;calcECal();}}
@@ -627,7 +657,24 @@ function delFiltered(){
 
 // ========== ADD MEAL ==========
 function selType(btn){document.querySelectorAll('.quick-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');}
-function popFoods(sel){document.getElementById(sel).innerHTML='<option value="">Seleziona...</option>'+DB.foods.map(f=>`<option value="${f.id}">${f.name}</option>`).join('');}
+function popFoods(sel,search=''){
+    const s=search.toLowerCase();
+    const fs=s?DB.foods.filter(f=>f.name.toLowerCase().includes(s)):DB.foods;
+    document.getElementById(sel).innerHTML='<option value="">Seleziona...</option>'+fs.map(f=>`<option value="${f.id}">${f.name} (${f.calories} kcal/${f.refQty}${f.unit})</option>`).join('');
+}
+function filterMealFoods(){
+    const s=document.getElementById('mFoodSearch').value;
+    popFoods('mFood',s);
+    // Auto-select if only one result
+    const fs=DB.foods.filter(f=>f.name.toLowerCase().includes(s.toLowerCase()));
+    if(fs.length===1){document.getElementById('mFood').value=fs[0].id;updFood();}
+}
+function filterEditFoods(){
+    const s=document.getElementById('eFoodSearch').value;
+    popFoods('eFood',s);
+    const fs=DB.foods.filter(f=>f.name.toLowerCase().includes(s.toLowerCase()));
+    if(fs.length===1){document.getElementById('eFood').value=fs[0].id;updEFood();}
+}
 function updFood(){const f=DB.foods.find(x=>x.id===document.getElementById('mFood').value);if(f){document.getElementById('mQty').value=f.refQty;document.getElementById('mUnit').value=f.unit;calcCal();}}
 function calcCal(){
     const f=DB.foods.find(x=>x.id===document.getElementById('mFood').value), q=parseFloat(document.getElementById('mQty').value)||0;
@@ -664,7 +711,7 @@ function renderWeight(){renderChart();renderWeightHist();}
 function renderChart(){
     const cv=document.getElementById('wChart'), ctx=cv.getContext('2d');
     cv.width=cv.parentElement.clientWidth;cv.height=140;
-    const ws=[...DB.weights].sort((a,b)=>a.date.localeCompare(b.date)).slice(-14);
+    const ws=[...DB.weights].filter(w=>w.weight).sort((a,b)=>a.date.localeCompare(b.date)).slice(-14);
     if(ws.length<2){ctx.fillStyle='rgba(255,255,255,0.3)';ctx.font='14px sans-serif';ctx.textAlign='center';ctx.fillText('Serve almeno 2 pesi',cv.width/2,70);return;}
     const p=30, cw=cv.width-p*2, ch=cv.height-p*2;
     const min=Math.min(...ws.map(w=>w.weight))-1, max=Math.max(...ws.map(w=>w.weight))+1, rng=max-min;
@@ -680,18 +727,79 @@ function renderChart(){
 }
 function renderWeightHist(){
     const ws=[...DB.weights].sort((a,b)=>b.date.localeCompare(a.date)), c=document.getElementById('weightHist');
-    if(!ws.length){c.innerHTML='<div class="empty"><div class="empty-icon">⚖️</div><p>Nessun peso</p></div>';return;}
+    if(!ws.length){c.innerHTML='<div class="empty"><div class="empty-icon">⚖️</div><p>Nessun dato</p></div>';return;}
     c.innerHTML=ws.map((w,i)=>{
         let diff='';
-        if(i<ws.length-1){const ch=w.weight-ws[i+1].weight;if(ch!==0)diff=`<span class="weight-diff ${ch>0?'up':'down'}">${ch>0?'+':''}${ch.toFixed(1)}</span>`;}
-        return`<div class="weight-item"><span class="weight-date">${new Date(w.date).toLocaleDateString('it-IT',{day:'numeric',month:'short'})}</span><span class="weight-val">${w.weight.toFixed(1)} kg</span>${diff}</div>`;
+        if(w.weight&&i<ws.length-1&&ws[i+1].weight){const ch=w.weight-ws[i+1].weight;if(ch!==0)diff=`<span class="weight-diff ${ch>0?'up':'down'}">${ch>0?'+':''}${ch.toFixed(1)}</span>`;}
+        let line1=[];
+        if(w.weight)line1.push(`⚖️ ${w.weight.toFixed(1)} kg`);
+        if(w.presMax&&w.presMin)line1.push(`🩺 ${w.presMax}/${w.presMin}`);
+        if(w.bpm)line1.push(`❤️ ${w.bpm} bpm`);
+        return`<div class="weight-item" style="flex-direction:column;align-items:stretch;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span class="weight-date">${new Date(w.date).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'})}</span>
+                <div style="display:flex;gap:10px;align-items:center">
+                    ${line1.map(d=>`<span style="font-size:14px;font-weight:500">${d}</span>`).join('')}
+                    ${diff}
+                    <button class="meal-edit" onclick="openEditWeight('${w.date}')">✏️</button>
+                    <button class="meal-del" onclick="delWeight('${w.date}')">✕</button>
+                </div>
+            </div>
+            ${w.note?`<div style="font-size:12px;color:var(--text3);padding-left:4px">📝 ${w.note}</div>`:''}
+        </div>`;
     }).join('');
 }
 function saveWeight(){
     const v=parseFloat(document.getElementById('wVal').value), d=document.getElementById('wDate').value, n=document.getElementById('wNote').value.trim();
-    if(!v||!d){alert('Inserisci peso e data!');return;}
-    DB.weights=DB.weights.filter(w=>w.date!==d);DB.weights.push({date:d,weight:v,note:n});
-    save();closeModal('addWeightModal');document.getElementById('wVal').value='';document.getElementById('wNote').value='';renderWeight();refreshDash();
+    const pMax=parseInt(document.getElementById('wPresMax').value)||null;
+    const pMin=parseInt(document.getElementById('wPresMin').value)||null;
+    const bpm=parseInt(document.getElementById('wBpm').value)||null;
+    if(!d){alert('Inserisci la data!');return;}
+    if(!v&&!pMax&&!pMin&&!bpm){alert('Inserisci almeno un valore!');return;}
+    DB.weights=DB.weights.filter(w=>w.date!==d);
+    DB.weights.push({date:d,weight:v||null,presMax:pMax,presMin:pMin,bpm:bpm,note:n});
+    save();closeModal('addWeightModal');
+    document.getElementById('wVal').value='';document.getElementById('wPresMax').value='';document.getElementById('wPresMin').value='';document.getElementById('wBpm').value='';document.getElementById('wNote').value='';
+    renderWeight();refreshDash();
+}
+
+function openEditWeight(date){
+    const w=DB.weights.find(x=>x.date===date);if(!w)return;
+    document.getElementById('ewOrigDate').value=w.date;
+    document.getElementById('ewDate').value=w.date;
+    document.getElementById('ewVal').value=w.weight||'';
+    document.getElementById('ewPresMax').value=w.presMax||'';
+    document.getElementById('ewPresMin').value=w.presMin||'';
+    document.getElementById('ewBpm').value=w.bpm||'';
+    document.getElementById('ewNote').value=w.note||'';
+    openModal('editWeightModal');
+}
+
+function updateWeight(){
+    const origDate=document.getElementById('ewOrigDate').value;
+    const d=document.getElementById('ewDate').value;
+    const v=parseFloat(document.getElementById('ewVal').value)||null;
+    const pMax=parseInt(document.getElementById('ewPresMax').value)||null;
+    const pMin=parseInt(document.getElementById('ewPresMin').value)||null;
+    const bpm=parseInt(document.getElementById('ewBpm').value)||null;
+    const n=document.getElementById('ewNote').value.trim();
+    if(!d){alert('Inserisci la data!');return;}
+    if(!v&&!pMax&&!pMin&&!bpm){alert('Inserisci almeno un valore!');return;}
+    // Remove original record
+    DB.weights=DB.weights.filter(w=>w.date!==origDate);
+    // Remove any existing record on new date if date changed
+    if(d!==origDate)DB.weights=DB.weights.filter(w=>w.date!==d);
+    DB.weights.push({date:d,weight:v,presMax:pMax,presMin:pMin,bpm:bpm,note:n});
+    save();closeModal('editWeightModal');
+    renderWeight();refreshDash();
+}
+
+function delWeight(date){
+    const w=DB.weights.find(x=>x.date===date);
+    if(w&&confirm('Eliminare questo record?')){
+        DB.weights=DB.weights.filter(x=>x.date!==date);
+        save();renderWeight();refreshDash();
+    }
 }
 
 // ========== SETTINGS ==========
@@ -744,17 +852,21 @@ function impMeals(){
     }catch(err){alert('Errore: '+err.message);}};r.readAsArrayBuffer(e.target.files[0]);};i.click();
 }
 function expWeights(){
-    const d=[['Gio_Data','Gio_Peso','Gio_Desc']];
-    [...DB.weights].sort((a,b)=>a.date.localeCompare(b.date)).forEach(w=>d.push([fmtDateXls(w.date),w.weight,w.note||'']));
+    const d=[['Gio_Data','Gio_Peso','Gio_PresMax','Gio_PresMin','Gio_Bpm','Gio_Desc']];
+    [...DB.weights].sort((a,b)=>a.date.localeCompare(b.date)).forEach(w=>d.push([fmtDateXls(w.date),w.weight||'',w.presMax||'',w.presMin||'',w.bpm||'',w.note||'']));
     const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(d),'Giorno');XLSX.writeFile(wb,'Giorno.xlsx');
 }
 function impWeights(){
     const i=document.createElement('input');i.type='file';i.accept='.xlsx,.xls';
     i.onchange=e=>{const r=new FileReader();r.onload=ev=>{try{
         const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'}), data=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{raw:false}), ws=[];
-        data.forEach(row=>{const dt=parseDateXls(row.Gio_Data||row.Data), p=row.Gio_Peso||row.Peso;
-            if(dt&&p)ws.push({date:dt,weight:parseFloat(p),note:row.Gio_Desc||row.Note||''});});
-        if(ws.length&&confirm(`Importare ${ws.length} pesi?`)){DB.weights=ws;save();renderWeight();refreshDash();alert('OK!');}
+        data.forEach(row=>{const dt=parseDateXls(row.Gio_Data||row.Data);
+            const p=row.Gio_Peso||row.Peso;
+            const pMax=row.Gio_PresMax||row.PresMax||row.Pressione_Max;
+            const pMin=row.Gio_PresMin||row.PresMin||row.Pressione_Min;
+            const bpm=row.Gio_Bpm||row.Bpm||row.Battito;
+            if(dt){ws.push({date:dt,weight:p?parseFloat(p):null,presMax:pMax?parseInt(pMax):null,presMin:pMin?parseInt(pMin):null,bpm:bpm?parseInt(bpm):null,note:row.Gio_Desc||row.Note||''});}});
+        if(ws.length&&confirm(`Importare ${ws.length} record?`)){DB.weights=ws;save();renderWeight();refreshDash();alert('OK!');}
     }catch(err){alert('Errore: '+err.message);}};r.readAsArrayBuffer(e.target.files[0]);};i.click();
 }
 
