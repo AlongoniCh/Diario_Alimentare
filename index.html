@@ -311,6 +311,10 @@
                 <button class="filter-btn active" onclick="setFilter('month',this)">Mese</button>
                 <button class="filter-btn" onclick="setFilter('all',this)">Tutti</button>
             </div>
+            <div class="filter-bar" style="margin-top:8px">
+                <button class="filter-btn active" id="viewDetailBtn" onclick="setMealsViewMode('detail')">📋 Dettaglio</button>
+                <button class="filter-btn" id="viewSummaryBtn" onclick="setMealsViewMode('summary')">📊 Riepilogo</button>
+            </div>
             <div class="pills">
                 <div class="pill"><span class="pill-val" id="mCnt">0</span><span class="pill-lbl">pasti</span></div>
                 <div class="pill"><span class="pill-val" id="mKcal">0</span><span class="pill-lbl">kcal</span></div>
@@ -466,6 +470,27 @@
         </div>
     </div>
 
+    <!-- EDIT FOOD MODAL -->
+    <div class="modal" id="editFoodModal">
+        <div class="sheet">
+            <div class="sheet-handle"></div>
+            <div class="sheet-head"><h2 class="sheet-title">Modifica Alimento</h2><button class="sheet-close" onclick="closeModal('editFoodModal')">✕</button></div>
+            <input type="hidden" id="efId">
+            <div class="form-group"><label class="form-label">Nome</label><input type="text" class="form-input" id="efName"></div>
+            <div class="form-row">
+                <div class="form-group"><label class="form-label">Calorie</label><input type="number" class="form-input" id="efCal"></div>
+                <div class="form-group"><label class="form-label">Per quantità</label><input type="number" class="form-input" id="efQty"></div>
+            </div>
+            <div class="form-group"><label class="form-label">Unità</label>
+                <select class="form-select" id="efUnit"><option value="g">grammi (g)</option><option value="ml">millilitri (ml)</option><option value="pz">pezzi</option><option value="porzione">porzione</option></select>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" style="background:var(--red);color:#fff" onclick="delFoodConfirm()">Elimina</button>
+                <button class="btn btn-primary" onclick="updateFood()">Salva</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ADD WEIGHT MODAL -->
     <div class="modal" id="addWeightModal">
         <div class="sheet">
@@ -507,7 +532,7 @@
 <script>
 // ========== DATA ==========
 const DB={foods:[],meals:[],weights:[],settings:{calorieGoal:2000}};
-let selDate=new Date(), filterFrom='', filterTo='';
+let selDate=new Date(), filterFrom='', filterTo='', mealsViewMode='detail';
 
 function load(){
     const s=localStorage.getItem('diarioFood');
@@ -597,6 +622,13 @@ function setFilter(p,btn){
     filterFrom=fmtDate(f);filterTo=fmtDate(t);
     renderMealsHist();
 }
+function setMealsViewMode(mode){
+    mealsViewMode=mode;
+    document.getElementById('viewDetailBtn').classList.toggle('active',mode==='detail');
+    document.getElementById('viewSummaryBtn').classList.toggle('active',mode==='summary');
+    renderMealsHist();
+}
+
 function renderMealsHist(){
     let ms=DB.meals.filter(m=>(!filterFrom||m.date>=filterFrom)&&(!filterTo||m.date<=filterTo));
     ms.sort((a,b)=>b.date.localeCompare(a.date)||b.time.localeCompare(a.time));
@@ -606,17 +638,45 @@ function renderMealsHist(){
     document.getElementById('mAvg').textContent=avg.toLocaleString();
     const c=document.getElementById('mealsHist');
     if(!ms.length){c.innerHTML='<div class="card"><div class="empty"><div class="empty-icon">🍽️</div><p>Nessun pasto</p></div></div>';return;}
+    
     const grp={};ms.forEach(m=>{if(!grp[m.date])grp[m.date]=[];grp[m.date].push(m);});
     let h='';
-    Object.keys(grp).sort((a,b)=>b.localeCompare(a)).forEach(d=>{
-        const items=grp[d], kcal=items.reduce((s,m)=>s+m.calories,0);
-        const dt=new Date(d).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
-        h+=`<div class="date-group"><div class="date-head"><span class="date-head-title">${dt}</span><span class="date-head-kcal">${kcal} kcal</span></div><div class="date-items">`;
-        items.sort((a,b)=>a.time.localeCompare(b.time)).forEach(m=>{
-            h+=`<div class="meal-item"><div class="meal-time">${m.time}</div><div class="meal-info"><div class="meal-name">${m.foodName}</div><div class="meal-meta">${m.qty} ${m.unit}</div></div><div class="meal-kcal">${m.calories}</div><button class="meal-edit" onclick="openEdit('${m.id}')">✏️</button><button class="meal-del" onclick="delMealC('${m.id}')">✕</button></div>`;
+    
+    if(mealsViewMode==='summary'){
+        // Summary view - only daily calories
+        h='<div class="card">';
+        Object.keys(grp).sort((a,b)=>b.localeCompare(a)).forEach(d=>{
+            const items=grp[d], kcal=items.reduce((s,m)=>s+m.calories,0);
+            const dt=new Date(d).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});
+            const goal=DB.settings.calorieGoal;
+            const pct=Math.round((kcal/goal)*100);
+            const color=kcal>goal?'var(--red)':kcal>=goal*0.8?'var(--orange)':'var(--green)';
+            h+=`<div class="weight-item" style="flex-direction:column;gap:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+                    <span class="weight-date">${dt}</span>
+                    <div style="display:flex;gap:12px;align-items:center">
+                        <span style="font-size:16px;font-weight:600;color:${color}">${kcal} kcal</span>
+                        <span style="font-size:12px;color:var(--text3)">${pct}%</span>
+                    </div>
+                </div>
+                <div style="width:100%;height:6px;background:var(--bg3);border-radius:3px;overflow:hidden">
+                    <div style="width:${Math.min(pct,100)}%;height:100%;background:${color};border-radius:3px"></div>
+                </div>
+            </div>`;
         });
-        h+=`</div></div>`;
-    });
+        h+='</div>';
+    } else {
+        // Detail view - full meal list
+        Object.keys(grp).sort((a,b)=>b.localeCompare(a)).forEach(d=>{
+            const items=grp[d], kcal=items.reduce((s,m)=>s+m.calories,0);
+            const dt=new Date(d).toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
+            h+=`<div class="date-group"><div class="date-head"><span class="date-head-title">${dt}</span><span class="date-head-kcal">${kcal} kcal</span></div><div class="date-items">`;
+            items.sort((a,b)=>a.time.localeCompare(b.time)).forEach(m=>{
+                h+=`<div class="meal-item"><div class="meal-time">${m.time}</div><div class="meal-info"><div class="meal-name">${m.foodName}</div><div class="meal-meta">${m.qty} ${m.unit}</div></div><div class="meal-kcal">${m.calories}</div><button class="meal-edit" onclick="openEdit('${m.id}')">✏️</button><button class="meal-del" onclick="delMealC('${m.id}')">✕</button></div>`;
+            });
+            h+=`</div></div>`;
+        });
+    }
     c.innerHTML=h;
 }
 function openEdit(id){
@@ -696,7 +756,7 @@ function renderFoods(){
     const s=document.getElementById('foodSearch').value.toLowerCase(), fs=DB.foods.filter(f=>f.name.toLowerCase().includes(s));
     const c=document.getElementById('foodList');
     if(!fs.length){c.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><p>Nessun alimento</p></div>';return;}
-    c.innerHTML=fs.map(f=>`<div class="food-item" onclick="delFood('${f.id}')"><div><div class="food-name">${f.name}</div><div class="food-sub">per ${f.refQty} ${f.unit}</div></div><div class="food-kcal">${f.calories} kcal</div></div>`).join('');
+    c.innerHTML=fs.map(f=>`<div class="food-item" onclick="openEditFood('${f.id}')"><div><div class="food-name">${f.name}</div><div class="food-sub">per ${f.refQty} ${f.unit}</div></div><div class="food-kcal">${f.calories} kcal</div></div>`).join('');
 }
 function saveFood(){
     const n=document.getElementById('fName').value.trim(), cal=parseInt(document.getElementById('fCal').value), q=parseFloat(document.getElementById('fQty').value), u=document.getElementById('fUnit').value;
@@ -704,6 +764,36 @@ function saveFood(){
     DB.foods.push({id:'F'+Date.now(),name:n,calories:cal,refQty:q,unit:u});
     save();closeModal('addFoodModal');document.getElementById('fName').value='';document.getElementById('fCal').value='';document.getElementById('fQty').value='';renderFoods();
 }
+
+function openEditFood(id){
+    const f=DB.foods.find(x=>x.id===id);if(!f)return;
+    document.getElementById('efId').value=f.id;
+    document.getElementById('efName').value=f.name;
+    document.getElementById('efCal').value=f.calories;
+    document.getElementById('efQty').value=f.refQty;
+    document.getElementById('efUnit').value=f.unit;
+    openModal('editFoodModal');
+}
+
+function updateFood(){
+    const id=document.getElementById('efId').value;
+    const n=document.getElementById('efName').value.trim();
+    const cal=parseInt(document.getElementById('efCal').value);
+    const q=parseFloat(document.getElementById('efQty').value);
+    const u=document.getElementById('efUnit').value;
+    if(!n||!cal||!q){alert('Compila tutto!');return;}
+    const i=DB.foods.findIndex(x=>x.id===id);
+    if(i>=0){DB.foods[i]={id,name:n,calories:cal,refQty:q,unit:u};save();closeModal('editFoodModal');renderFoods();}
+}
+
+function delFoodConfirm(){
+    const id=document.getElementById('efId').value;
+    if(confirm('Eliminare questo alimento?')){
+        DB.foods=DB.foods.filter(f=>f.id!==id);
+        save();closeModal('editFoodModal');renderFoods();
+    }
+}
+
 function delFood(id){if(confirm('Eliminare?')){DB.foods=DB.foods.filter(f=>f.id!==id);save();renderFoods();}}
 
 // ========== WEIGHT ==========
